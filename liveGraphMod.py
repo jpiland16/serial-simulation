@@ -12,11 +12,11 @@ import numpy as np
 import time
 import serial.tools.list_ports as stlp
 import threading
-import _algorithm
-import _simulation
-import _simonSerial
-import _videoCapture
-import _dataRecording
+import algorithm
+import simulation
+import simonSerial
+import videoCapture
+import dataRecording
 import ctypes
 
 try:
@@ -82,13 +82,13 @@ total_logs_received = 0
 total_frames_dropped = 0
 
 if SIMULATION_ON:
-    _simonSerial.begin_sim()
+    simonSerial.begin_sim()
 
 if DATARECORDINGS_ON or VIDEOCAPTURE_ON:
-    folder_name = _videoCapture.setup_folder()
+    folder_name = videoCapture.setup_folder()
 
 if DATARECORDINGS_ON:
-    _dataRecording.setup(num_of_graphs)
+    dataRecording.setup(num_of_graphs)
 
 index = 0
 
@@ -107,7 +107,7 @@ for i in range(0, num_of_graphs):
     y_points.append([])
 
 if VIDEOCAPTURE_ON:
-    _videoCapture.prepare(folder_name)
+    videoCapture.prepare(folder_name)
 
 if GRAPHING_ON:
     fig = plt.figure(figsize=(win_wd, win_ht))
@@ -147,10 +147,10 @@ def main():
         currentY = []
         
         if VIDEOCAPTURE_ON:
-            _videoCapture.capture_frame()
+            videoCapture.capture_frame()
 
-        if not SIMULATION_ON or _simonSerial.simulation.is_alive():
-            data = _simonSerial.update()
+        if not SIMULATION_ON or simonSerial.simulation.is_alive():
+            data = simonSerial.update()
         else:
             break
 
@@ -169,7 +169,7 @@ def main():
             currentY.append(dataPoint)
             
             if i == (num_of_graphs - 1) and debug_wait:
-                y_points[i][-1] = serialPort.in_waiting
+                y_points[i][-1] = simonSerial.serialPort.in_waiting
         
         if len(x_points) > max_list_length:
             x_points.pop(0)
@@ -177,9 +177,9 @@ def main():
                 y_points[i].pop(0)
 
         if DATARECORDINGS_ON:    
-            _dataRecording.add_point(elapsed_time, currentY, angles)
+            dataRecording.add_point(elapsed_time, currentY, angles)
         
-        waiting_messages = _simonSerial.serialPort.in_waiting
+        waiting_messages = simonSerial.serialPort.in_waiting
         
         if drop_frames and waiting_messages > drop_threshold:
             total_frames_dropped += 1
@@ -193,7 +193,7 @@ def main():
     exitFunction()
 
 def live_update(blit = False):
-    global ax2, fig, x, line, text, ax2background
+    global ax2, fig, text, ax2background
     ax2.set_xlim(x_points[0], x_points[-1]+0.001)
 
     text.set_position((x_points[0] + text_x , text_y))
@@ -234,16 +234,16 @@ def live_update(blit = False):
     # -----------------------------------------------------------------------------------------------------------------
 
 def exitFunction():
-    _simonSerial.serialPort.close()
+    simonSerial.serialPort.close()
     print("Serial port closed.        ")
-    if SIMULATION_ON and _simonSerial.simulation.is_alive:
-        _simonSerial.render.reference.running = False
+    if SIMULATION_ON and simonSerial.simulation.is_alive:
+        simonSerial.render.reference.running = False
         if GRAPHING_ON:
             plt.close()
     if VIDEOCAPTURE_ON:
-        _videoCapture.complete()
+        videoCapture.complete()
     if DATARECORDINGS_ON:
-        _dataRecording.complete(folder_name)
+        dataRecording.complete(folder_name)
 
 try:
     main()

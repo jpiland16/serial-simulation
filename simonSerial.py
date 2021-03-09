@@ -2,8 +2,8 @@ import time
 import serial.tools.list_ports as stlp
 import serial
 import threading
-import _algorithm
-import _simulation
+import algorithm
+import simulation
 
 # BEGIN PARAMETER SECTION -----------------
 
@@ -36,11 +36,11 @@ serialPort = serial.Serial(comport, BAUD_RATE)
 print("Serial port " + comport +  " opened at " + str(BAUD_RATE) + " baud.")
 
 def begin_sim():
-    global render, simulation, using_sim
+    global render, my_simulation, using_sim
     using_sim = True
-    render = _simulation.Render()
-    simulation = threading.Thread(target=render.begin)
-    simulation.start()
+    render = simulation.Render()
+    my_simulation = threading.Thread(target=render.begin)
+    my_simulation.start()
 
 def update():
     binaryData = serialPort.readline()
@@ -48,11 +48,11 @@ def update():
         textData = binaryData.decode().rstrip()
         dataValues = textData.split(",")
 
-        all_data.append(_algorithm.parse_data(dataValues))
+        all_data.append(algorithm.parse_data(dataValues))
         if(len(all_data) > DATA_HX_SIZE):
             all_data.pop(0)
 
-    angles = _algorithm.execute(all_data)
+    angles = algorithm.execute(all_data)
 
     if using_sim and render.reference is not None:
         render.reference.angles = angles
@@ -63,7 +63,7 @@ def main():
     begin_sim()
     while True:
         update()
-        if using_sim and not simulation.is_alive():
+        if using_sim and not my_simulation.is_alive():
             break
 
 if __name__ == "__main__":

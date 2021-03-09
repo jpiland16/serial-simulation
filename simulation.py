@@ -1,10 +1,10 @@
 from math import sin, cos, pi, radians, degrees, acos
-from core import Base, FirstPersonController, Renderer, Scene, Mesh, Object3D
-from cameras import PerspectiveCamera
-from geometry import BoxGeometry, SphereGeometry
-from material import SurfaceBasicMaterial, SurfaceLightMaterial
+from three.core import Base, FirstPersonController, Renderer, Scene, Mesh, Object3D
+from three.cameras import PerspectiveCamera
+from three.geometry import BoxGeometry, SphereGeometry
+from three.material import SurfaceBasicMaterial, SurfaceLightMaterial
 # from helpers import *
-from lights import DirectionalLight
+from three.lights import DirectionalLight
 import time
 import serial.tools.list_ports as stlp
 import serial
