@@ -149,7 +149,7 @@ def main():
         if VIDEOCAPTURE_ON:
             videoCapture.capture_frame()
 
-        if not SIMULATION_ON or simonSerial.simulation.is_alive():
+        if not SIMULATION_ON or simonSerial.my_simulation.is_alive():
             data = simonSerial.update()
         else:
             break
@@ -236,7 +236,7 @@ def live_update(blit = False):
 def exitFunction():
     simonSerial.serialPort.close()
     print("Serial port closed.        ")
-    if SIMULATION_ON and simonSerial.simulation.is_alive:
+    if SIMULATION_ON and simonSerial.my_simulation.is_alive:
         simonSerial.render.reference.running = False
         if GRAPHING_ON:
             plt.close()
