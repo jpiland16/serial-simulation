@@ -2,6 +2,7 @@ import numpy as np
 import cv2 as cv2
 import matplotlib.pyplot as plt
 import os
+import json
 
 # if you want the most recent file, use 1; Second most recent --> 2, etc.
 USE_RECENT = 2
@@ -10,6 +11,9 @@ directories = []
 chosen_path = ""
 
 prefix_path = "recorded-data/"
+
+if not os.path.isdir(prefix_path):
+    os.mkdir(prefix_path)
 
 for item in os.listdir(prefix_path):
     if os.path.isdir(prefix_path + item):
