@@ -189,3 +189,8 @@ class Render():
         p = Person()
         self.reference = p
         p.run()
+
+if __name__ == "__main__":
+    # demo code
+    my_render = Render()
+    my_render.begin()
