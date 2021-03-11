@@ -1,10 +1,12 @@
 import numpy as np
 import cv2 as cv2
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, Button
 import os
 import json
 import time
+import simulation
+import threading
 
 # -------------------------------------------
 # Important parameters ----------------------
@@ -58,6 +60,7 @@ chosen_path = ""
 prefix_path = "recorded-data/"
 
 STATE = "PAUSED"
+allowUpdate = False
 current_frame = 0;
 fps = 30;
 
@@ -67,6 +70,10 @@ y_points = []
 lines = []
 
 closePlot = False
+
+render = simulation.Render()
+my_simulation = threading.Thread(target=render.begin)
+my_simulation.start()
 
 def on_close(e):
     global closePlot
@@ -117,7 +124,7 @@ def main():
 
 
 def create_plot(num_of_graphs):
-    global lines, fig, im, ax1, ax1background, text, slider
+    global lines, fig, im, ax1, ax1background, text, slider, bplay
     fig, (ax0, ax1) = plt.subplots(1,2,figsize=(win_wd, win_ht))
     
     ax0.axis("off")
@@ -149,16 +156,40 @@ def create_plot(num_of_graphs):
     
     im = ax0.imshow(get_frame(1))
     
+    axb = plt.axes([0.47, 0.01, 0.1, 0.075])
+    bplay = Button(axb, 'Play/Pause')
+    bplay.on_clicked(click_play)
+    
     plt.show(block=False)
     update_plot()
 
+def play():
+    global current_frame, slider, allowUpdate, STATE
+    delta = 3
+    while STATE  == "PLAYING":
+        if current_frame + delta >= num_frames:
+            STATE = "PAUSED"
+            current_frame = 0
+            break
+        current_frame += delta
+        update_plot()
+        allowUpdate = True
+        slider.set_val(current_frame / fps)
+        allowUpdate = False
+        plt.pause(0.00001)
+
+def click_play(e):
+    global STATE
+    if STATE == "PAUSED":
+        STATE = "PLAYING"
+        play()
+    else:
+        STATE = "PAUSED"
+
 def slide(e):
-    global current_frame
-    """
-    PSEUDOCODE:
-        if playing:
-            pause()
-    """
+    global current_frame, STATE, allowUpdate
+    if not allowUpdate:
+        STATE = "PAUSED"
     current_frame = round(slider.val * fps)
     update_plot()
     #print(str(current_frame) + "    \r", end="")
@@ -186,6 +217,14 @@ def update_plot():
         
     ax1.axis([start, end, plot_ymin, plot_ymax])
     im.set_array(get_frame(frame + 1))
+    
+    my_angles = []
+    
+    for i in range(0, 5):
+        my_angles.append(dataObj[2][i][frame])
+    
+    if render.reference is not None:
+        render.reference.angles = my_angles
 
 
 def get_frame(frame_index):
