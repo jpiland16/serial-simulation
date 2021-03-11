@@ -96,7 +96,7 @@ class Joint(Object3D):
 class Person(Base):
     
     def initialize(self):
-
+        
         self.angles = [[10, 50, 60, 0, 15]]
 
         self.setWindowTitle('Simulation')
@@ -156,7 +156,7 @@ class Person(Base):
             fingerMCP.add_structure([FINGER_THICKNESS, FINGER_LENGTH[i], FINGER_THICKNESS], [0, -FINGER_LENGTH[i] / 2, (i - 1.5) * (FINGER_THICKNESS + FINGER_SEPARATION)], pink if color==None else color, 1 if alpha==None else alpha)
         
         if len(self.instances) == len(self.angles): # true except in the initial case, where angles are added first
-            self.angles.append([0,0,0,0,0])
+            self.angles.append([10, 50, 60, 0, 15])
 
         return {
             "shoulderAbductor": shoulderAbductor,

@@ -8,9 +8,9 @@ STATE = "REST"
 last_event = 0
 alsAngles = [10, 50, 60, 0, 15]
 
-def execute(data, should_print=False):
+def execute(data, should_print=False, advance_time=None):
     # Data is an array
-    return alshammary1(data, should_print)
+    return alshammary1(data, should_print, advance_time)
 
 def parse_data(raw_data):
     d = {
@@ -53,12 +53,12 @@ def wrist_only(data, should_print):
     return angles
 
 
-def alshammary1(data, should_print):
+def alshammary1(data, should_print, advance_time):
 
     global STATE, alsAngles, last_event
 
     RECENCY = 10
-    BICEP_ACTIVATION_THRESHOLD = 0.70 * MUSCLE_MAX
+    BICEP_ACTIVATION_THRESHOLD = 0.9 * MUSCLE_MAX
     TRICEP_ACTIVATION_THRESHOLD = 0.30 * MUSCLE_MAX
     EVENT_DELAY = 0.100 # seconds
 
@@ -68,16 +68,16 @@ def alshammary1(data, should_print):
     tricep_data = arrayify(actual_data, "m2")
 
     if average(bicep_data) > BICEP_ACTIVATION_THRESHOLD and STATE != "TRICEP":
-        last_event = time.time()
+        last_event = time.time() if advance_time is None else advance_time
         STATE = "BICEP"
         alsAngles[2] = min(alsAngles[2] + 5, 135)
 
     elif average(tricep_data) > TRICEP_ACTIVATION_THRESHOLD and STATE != "BICEP":
-        last_event = time.time()
+        last_event = time.time() if advance_time is None else advance_time
         STATE = "TRICEP"
         alsAngles[2] = max(alsAngles[2] - 5, 0)
 
-    elif (time.time() - last_event) > EVENT_DELAY:
+    elif ((time.time() if advance_time is None else advance_time) - last_event) > EVENT_DELAY:
         STATE = "REST"
 
     status = "Current state: " + STATE

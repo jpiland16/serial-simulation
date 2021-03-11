@@ -9,6 +9,8 @@ import simulation
 import threading
 import algorithm
 
+# region MISC_STARTUP_CODE
+
 # NOTE: The simulation using the three.py package needs to be run in a SYSTEM TERMINAL, not a Spyder terminal.
 
 # -------------------------------------------
@@ -78,21 +80,6 @@ lines = []
 
 closePlot = False
 
-instances = [
-    {
-     "color": [0.2, 0.2, 0.2],
-     "alpha": 1
-     }
-     ,    
-    {
-     "color":None,
-     "alpha":0.7  
-     }
-    ]
-
-render = simulation.Render(instances)
-my_simulation = threading.Thread(target=render.begin)
-my_simulation.start()
 
 def on_close(e):
     global closePlot
@@ -136,12 +123,44 @@ with open(chosen_path + "data.txt","a+") as file:
 x_points = dataObj[0]
 
 joined_data = []
+algorithm_result = []
+
+# endregion
 
 for i in range(0, len(x_points)):
     datapoint = []
     for j in range(0, 8):
         datapoint.append(dataObj[1][j][i])
     joined_data.append(algorithm.parse_data(datapoint))
+
+my_angles = []
+
+for i in range(0, 5):
+    my_angles.append(dataObj[2][i][0])
+
+algorithm_result.append(my_angles)
+
+for i in range(1, len(x_points)):
+    time_advance = x_points[i]
+    res = algorithm.execute(joined_data[0:i+1], False, time_advance)
+    algorithm_result.append(res[:])
+    
+
+instances = [
+    {
+     "color": [0.7, 0.7, 0.7],
+     "alpha": 0.7
+     }
+     ,    
+    {
+     "color":None,
+     "alpha":0.7  
+     }
+    ]
+
+render = simulation.Render(instances)
+my_simulation = threading.Thread(target=render.begin)
+my_simulation.start()
 
 def main():
     global cap, num_frames, my_simulation
@@ -253,8 +272,9 @@ def update_plot():
     
     if render is not None and render.reference is not None:
         render.reference.angles[0] = my_angles
-        render.reference.angles[1] = algorithm.execute(joined_data[0:frame+1])
-
+        if len(render.reference.angles) > 1:
+            render.reference.angles[1] = algorithm_result[frame]
+        #print(algorithm_result[frame])
 
 
 def get_frame(frame_index):
