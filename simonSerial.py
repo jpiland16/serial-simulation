@@ -55,7 +55,7 @@ def update():
     angles = algorithm.execute(all_data)
 
     if using_sim and render.reference is not None:
-        render.reference.angles = angles
+        render.reference.angles[0] = angles
 
     return [dataValues, angles]
 

@@ -58,7 +58,7 @@ def alshammary1(data, should_print):
     global STATE, alsAngles, last_event
 
     RECENCY = 10
-    BICEP_ACTIVATION_THRESHOLD = 0.30 * MUSCLE_MAX
+    BICEP_ACTIVATION_THRESHOLD = 0.70 * MUSCLE_MAX
     TRICEP_ACTIVATION_THRESHOLD = 0.30 * MUSCLE_MAX
     EVENT_DELAY = 0.100 # seconds
 
@@ -78,7 +78,7 @@ def alshammary1(data, should_print):
         alsAngles[2] = max(alsAngles[2] - 5, 0)
 
     elif (time.time() - last_event) > EVENT_DELAY:
-        STATE = "REST"    
+        STATE = "REST"
 
     status = "Current state: " + STATE
     if should_print and (time.time() * 100) % 10 < 2:

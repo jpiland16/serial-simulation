@@ -7,6 +7,9 @@ import json
 import time
 import simulation
 import threading
+import algorithm
+
+# NOTE: The simulation using the three.py package needs to be run in a SYSTEM TERMINAL, not a Spyder terminal.
 
 # -------------------------------------------
 # Important parameters ----------------------
@@ -53,6 +56,8 @@ USE_RECENT = 2
 directories = []
 chosen_path = ""
 
+slideMeansPause = False
+
 # -------------------------------------------
 # -------------------------------------------
 # -------------------------------------------
@@ -61,8 +66,10 @@ prefix_path = "recorded-data/"
 
 STATE = "PAUSED"
 allowUpdate = False
-current_frame = 0;
-fps = 30;
+current_frame = 0
+fps = 30
+
+render = None
 
 x_points = []
 y_points = []
@@ -71,13 +78,26 @@ lines = []
 
 closePlot = False
 
-render = simulation.Render()
+instances = [
+    {
+     "color": [0.2, 0.2, 0.2],
+     "alpha": 1
+     }
+     ,    
+    {
+     "color":None,
+     "alpha":0.7  
+     }
+    ]
+
+render = simulation.Render(instances)
 my_simulation = threading.Thread(target=render.begin)
 my_simulation.start()
 
 def on_close(e):
     global closePlot
     closePlot = True
+    render.reference.running = False
 
 for i in range(0, num_of_graphs):
     y_points.append([])
@@ -115,13 +135,20 @@ with open(chosen_path + "data.txt","a+") as file:
 
 x_points = dataObj[0]
 
+joined_data = []
+
+for i in range(0, len(x_points)):
+    datapoint = []
+    for j in range(0, 8):
+        datapoint.append(dataObj[1][j][i])
+    joined_data.append(algorithm.parse_data(datapoint))
+
 def main():
-    global cap, num_frames
+    global cap, num_frames, my_simulation
     cap = cv2.VideoCapture(chosen_path + "video.avi")
     num_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     my_frame = get_frame(7)
     create_plot(len(dataObj[1]))
-
 
 def create_plot(num_of_graphs):
     global lines, fig, im, ax1, ax1background, text, slider, bplay
@@ -160,7 +187,7 @@ def create_plot(num_of_graphs):
     bplay = Button(axb, 'Play/Pause')
     bplay.on_clicked(click_play)
     
-    plt.show(block=False)
+    plt.show()
     update_plot()
 
 def play():
@@ -188,7 +215,7 @@ def click_play(e):
 
 def slide(e):
     global current_frame, STATE, allowUpdate
-    if not allowUpdate:
+    if not allowUpdate and slideMeansPause:
         STATE = "PAUSED"
     current_frame = round(slider.val * fps)
     update_plot()
@@ -223,8 +250,11 @@ def update_plot():
     for i in range(0, 5):
         my_angles.append(dataObj[2][i][frame])
     
-    if render.reference is not None:
-        render.reference.angles = my_angles
+    
+    if render is not None and render.reference is not None:
+        render.reference.angles[0] = my_angles
+        render.reference.angles[1] = algorithm.execute(joined_data[0:frame+1])
+
 
 
 def get_frame(frame_index):

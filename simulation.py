@@ -58,8 +58,8 @@ class Joint(Object3D):
         self.angle = 0
         self.rotation_axis = rotation_axis
         
-    def add_structure(self, dimensions, translation, color):
-        structure = Mesh( BoxGeometry(dimensions[0], dimensions[1], dimensions[2]), SurfaceLightMaterial(color=color))
+    def add_structure(self, dimensions, translation, color, alpha=1):
+        structure = Mesh( BoxGeometry(dimensions[0], dimensions[1], dimensions[2]), SurfaceLightMaterial(color=color, alpha=alpha))
         self.add(structure)
         structure.transform.setPosition(translation[0], translation[1], translation[2])
 
@@ -97,7 +97,7 @@ class Person(Base):
     
     def initialize(self):
 
-        self.angles = [10, 50, 60, 0, 15]
+        self.angles = [[10, 50, 60, 0, 15]]
 
         self.setWindowTitle('Simulation')
         self.setWindowSize(800,800)
@@ -124,39 +124,56 @@ class Person(Base):
 
         # Create the parts of the simulation
 
-        self.chestBase = Joint(self.scene, [2, 0, 2], lambda d: False, lambda d: 0, "N")
-        self.chestBase.add_structure([CHEST_THICKNESS, CHEST_HEIGHT, CHEST_WIDTH], [0, 0, 0], red)
-        self.chestBase.transform.rotateY( 3 * pi / 4 )
-          
-        self.shoulderFlexor = Joint(self.chestBase, [0, CHEST_HEIGHT / 2 - UPPER_ARM_THICKNESS / 2, - CHEST_WIDTH / 2 - UPPER_ARM_THICKNESS / 2], lambda d: True, lambda d: -d, "Z")
-        self.shoulderAbductor = Joint(self.shoulderFlexor, [0, 0, 0], lambda d: (d <= 100) and (d >= 0), lambda d: d, "X")
-        self.shoulderAbductor.add_structure([UPPER_ARM_THICKNESS, UPPER_ARM_LENGTH, UPPER_ARM_THICKNESS], [0, - UPPER_ARM_LENGTH / 2, 0], orange)
+        self.instances = []
         
-        self.elbow = Joint(self.shoulderAbductor, [0, -UPPER_ARM_LENGTH, 0], lambda d: (d >= 0) and (d <= 135), lambda d: -d, "Z")
-        self.elbow.add_structure([FOREARM_THICKNESS, FOREARM_LENGTH, FOREARM_THICKNESS], [0, -FOREARM_LENGTH / 2, 0], yellow) 
-        
-        self.wrist = Joint(self.elbow, [0, -FOREARM_LENGTH, 0], lambda d: True, lambda d: d, "Y")
-        self.wrist.add_structure([PALM_THICKNESS, PALM_LENGTH, PALM_WIDTH], [0, -PALM_LENGTH / 2, 0], green)
-
-        self.thumbCMC = Joint(self.wrist, [0, PALM_LENGTH / 5, -PALM_WIDTH / 4], lambda d: True, lambda d: d, "X")
-        self.thumbCMC.add_structure([FINGER_THICKNESS * 4/3, 2/3 * PALM_LENGTH, FINGER_THICKNESS * 4/3], [0, - 2/3 * PALM_LENGTH, 0], lblue)
-        self.thumbCMC.set_angle(45)
-        self.thumbCMC.transform.rotateY(pi / 12)
-
-        self.fingerMCP = Joint(self.wrist, [-FINGER_THICKNESS, -PALM_LENGTH, 0], lambda d: d >= 0 and d <= 180, lambda d: -d, "Z")
-        for i in range (0, 4):
-            self.fingerMCP.add_structure([FINGER_THICKNESS, FINGER_LENGTH[i], FINGER_THICKNESS], [0, -FINGER_LENGTH[i] / 2, (i - 1.5) * (FINGER_THICKNESS + FINGER_SEPARATION)], pink)
+        for index, i in enumerate(inst):
+            self.instances.append(self.add_instance(index, i["color"], i["alpha"]))
         
         self.time = 0
 
-    def update(self):
+    def add_instance(self, index, color=None, alpha=None):
+        chestBase = Joint(self.scene, [2 + 4*index, 0, 2], lambda d: False, lambda d: 0, "N")
+        chestBase.add_structure([CHEST_THICKNESS, CHEST_HEIGHT, CHEST_WIDTH], [0, 0, 0], red if color==None else color, 1 if alpha==None else alpha)
+        chestBase.transform.rotateY( 3 * pi / 4 )
+          
+        shoulderFlexor = Joint(chestBase, [0, CHEST_HEIGHT / 2 - UPPER_ARM_THICKNESS / 2, - CHEST_WIDTH / 2 - UPPER_ARM_THICKNESS / 2], lambda d: True, lambda d: -d, "Z")
+        shoulderAbductor = Joint(shoulderFlexor, [0, 0, 0], lambda d: (d <= 100) and (d >= 0), lambda d: d, "X")
+        shoulderAbductor.add_structure([UPPER_ARM_THICKNESS, UPPER_ARM_LENGTH, UPPER_ARM_THICKNESS], [0, - UPPER_ARM_LENGTH / 2, 0], orange if color==None else color, 1 if alpha==None else alpha)
         
+        elbow = Joint(shoulderAbductor, [0, -UPPER_ARM_LENGTH, 0], lambda d: (d >= 0) and (d <= 135), lambda d: -d, "Z")
+        elbow.add_structure([FOREARM_THICKNESS, FOREARM_LENGTH, FOREARM_THICKNESS], [0, -FOREARM_LENGTH / 2, 0], yellow if color==None else color, 1 if alpha==None else alpha) 
+        
+        wrist = Joint(elbow, [0, -FOREARM_LENGTH, 0], lambda d: True, lambda d: d, "Y")
+        wrist.add_structure([PALM_THICKNESS, PALM_LENGTH, PALM_WIDTH], [0, -PALM_LENGTH / 2, 0], green if color==None else color, 1 if alpha==None else alpha)
+
+        thumbCMC = Joint(wrist, [0, PALM_LENGTH / 5, -PALM_WIDTH / 4], lambda d: True, lambda d: d, "X")
+        thumbCMC.add_structure([FINGER_THICKNESS * 4/3, 2/3 * PALM_LENGTH, FINGER_THICKNESS * 4/3], [0, - 2/3 * PALM_LENGTH, 0], lblue if color==None else color, 1 if alpha==None else alpha)
+        thumbCMC.set_angle(45)
+        thumbCMC.transform.rotateY(pi / 12)
+
+        fingerMCP = Joint(wrist, [-FINGER_THICKNESS, -PALM_LENGTH, 0], lambda d: d >= 0 and d <= 180, lambda d: -d, "Z")
+        for i in range (0, 4):
+            fingerMCP.add_structure([FINGER_THICKNESS, FINGER_LENGTH[i], FINGER_THICKNESS], [0, -FINGER_LENGTH[i] / 2, (i - 1.5) * (FINGER_THICKNESS + FINGER_SEPARATION)], pink if color==None else color, 1 if alpha==None else alpha)
+        
+        if len(self.instances) == len(self.angles): # true except in the initial case, where angles are added first
+            self.angles.append([0,0,0,0,0])
+
+        return {
+            "shoulderAbductor": shoulderAbductor,
+            "shoulderFlexor": shoulderFlexor,
+            "elbow": elbow,
+            "wrist": wrist,
+            "fingerMCP": fingerMCP
+        }
+        
+
+    def update(self):
         self.cameraControls.update()
 
         hundredths = (int) (self.time * 100)
         if hundredths % 10 < 2:
             labels = ['Shoulder abd.', "Shoulder flex.", "Elbow flex.", "Wrist pro.", "Finger flex."]
-            printable_angles = [int(self.shoulderAbductor.angle), int(self.shoulderFlexor.angle), int(-self.elbow.angle), int(self.wrist.angle), int(-self.fingerMCP.angle)]
+            printable_angles = [int(self.instances[0]["shoulderAbductor"].angle), int(self.instances[0]["shoulderFlexor"].angle), int(-self.instances[0]["elbow"].angle), int(self.instances[0]["wrist"].angle), int(-self.instances[0]["fingerMCP"].angle)]
             title = ""            
             for i in range(0, 5):
                 title += labels[i] + ": " + str(printable_angles[i] % 360) + "\u00b0"
@@ -173,17 +190,20 @@ class Person(Base):
         
         self.time += self.deltaTime
 
-        self.shoulderAbductor.set_angle(self.angles[0])
-        self.shoulderFlexor.set_angle(self.angles[1])
-        self.elbow.set_angle(self.angles[2])
-        self.wrist.set_angle(self.angles[3])
-        self.fingerMCP.set_angle(self.angles[4])  
-        
+        for i in range(0, len(self.instances)):
+            self.instances[i]["shoulderAbductor"].set_angle(self.angles[i][0])
+            self.instances[i]["shoulderFlexor"].set_angle(self.angles[i][1])
+            self.instances[i]["elbow"].set_angle(self.angles[i][2])
+            self.instances[i]["wrist"].set_angle(self.angles[i][3])
+            self.instances[i]["fingerMCP"].set_angle(self.angles[i][4])  
+            
         self.renderer.render(self.scene, self.camera)
 
 class Render():
-    def __init__(self):
+    def __init__(self, num_instances):
         self.reference = None
+        global inst
+        inst = num_instances
 
     def begin(self):
         p = Person()
@@ -192,5 +212,5 @@ class Render():
 
 if __name__ == "__main__":
     # demo code
-    my_render = Render()
+    my_render = Render([{"color":None,"alpha":None}])
     my_render.begin()
