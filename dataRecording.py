@@ -19,9 +19,9 @@ def add_point(x, y_array, angle_array):
             y_points[i].append(y_array[i])
     for i in range(0, len(angle_array)):
         if i < len(angles):
-            y_points[i].append(angle_array[i])
+            angles[i].append(angle_array[i])
 
 def complete(folder_name):
     with open("recorded-data\\" + folder_name + "\\data.txt","w") as file:
-        data = json.dumps([x_points,y_points])
+        data = json.dumps([x_points,y_points,angles])
         file.write(data)
